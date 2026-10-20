@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router";
 import { AXIOS } from "../services";
 
 
-const Cadrastro = () => {
+const Cadastro = () => {
     const nome = useRef(null);
     const email = useRef(null);
     const senha = useRef(null);
@@ -26,6 +26,7 @@ const Cadrastro = () => {
                 alert(resposta.data.mensage)
                 return;
             }
+        sessionStorage.setItem("usuario", JSON.stringify(resposta.data.usuario))
             alert(resposta.data.mensage);
             navegar("/")
         } catch (error) {
@@ -101,4 +102,4 @@ const Cadrastro = () => {
         </div>
     );
 }
-export default Cadrastro;
+export default Cadastro;

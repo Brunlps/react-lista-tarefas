@@ -6,7 +6,7 @@ const Login = () => {
     const email = useRef(null);
     const senha = useRef(null);
     const navegar = useNavigate();
-    const [carregar, setCarregando] = useState(false);
+    const [carregando, setCarregando] = useState(false);
 
     async function logar(event) {
         event.preventDefault();
@@ -19,15 +19,15 @@ const Login = () => {
         }
 
         try {
-            const resposta = await Axios.post("/login", dados);
+            const resposta = await AXIOS.post("/login", dados);
             setCarregando(false);
 
             if (resposta.data.tipo == "warning") {
-                alert(resposta.data.mensage)
+                alert(resposta.data.mensagem)
                 return;
             }
-            sessionStorage.setItem("usuario", JSON.stringify(resposta.data.mensage));
-            alert(resposta.data.mensage);
+            sessionStorage.setItem("usuario", JSON.stringify(resposta.data.mensagem));
+            alert(resposta.data.mensagem);
             navegar("/tarefas")
         } catch (error) {
             setCarregando(false);
@@ -85,8 +85,8 @@ const Login = () => {
 
                     <Link to="cadastro" className="my-5">Cadastre-se</Link>
 
-                    <button disabled={carregar} className="w-full h-10 rounded bg-purple-400 hover:bg-purple-600 duration-200 hover:text-white font-bold">
-                        {carregar ? "Carregando..." : "Logar"}
+                    <button disabled={carregando} className="w-full h-10 rounded bg-purple-400 hover:bg-purple-600 duration-200 hover:text-white font-bold">
+                        {carregando ? "Carregando..." : "Logar"}
                     </button>
 
                 </form>
