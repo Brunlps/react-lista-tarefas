@@ -9,7 +9,7 @@ const NaoEncotrada = () => {
             <p>
                 Página não encontrada!
             </p>
-            <Link to="/">Voltar</Link>
+            <Link to="/*">Voltar</Link>
         </div>
      );
 }

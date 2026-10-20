@@ -1,69 +1,100 @@
-import { Link } from "react-router";
+import { useRef, useState } from "react";
+import { Link, useNavigate } from "react-router";
+import { AXIOS } from "../services";
+
 
 const Cadrastro = () => {
-    function cadastrar() {
+    const nome = useRef(null);
+    const email = useRef(null);
+    const senha = useRef(null);
+    const navegar = useNavigate();
+    const [dadosCadastrados, setDadosCadastrados] = useState(false);
+
+    async function cadastrar(event) {
         event.preventDefault();
-
-        let nome = document.querySelector('#nome').value;
-        let email = document.querySelector('#email').value;
-        let senha = document.querySelector('#senha').value;
-
+        setDadosCadastrados(true)
         let dados = {
-            nome,
-            email,
-            senha
+            nome: nome.current.value,
+            email: email.current.value,
+            senha: senha.current.value
         }
 
-        fetch("https://js-lista-de-tarefas-api.onrender.com/usuarios", {
-            method: "post",
-            headers: {
-                "Content-type": "application/json"
-            },
-            body: JSON.stringify(dados)
-        })
-            .then(resposta => resposta.json())
-            .then(json => {
-                // Vamos tratar o dado de login, verificar se vem um erro, ou não.
+        try {
+            const resposta = await AXIOS.post("/usuarios", dados)
+            setDadosCadastrados(false);
+            if (resposta.data.tipo == "error") {
+                alert(resposta.data.mensage)
+                return;
+            }
+            alert(resposta.data.mensage);
+            navegar("/")
+        } catch (error) {
+            setDadosCadastrados(false);
+            alert(error.mensagem)
+        }
 
-                if (json.tipo == "error") {
-                    alert(json.mensagem);
-                    return;
-                }
-                alert(json.mensagem);
-                window.location.href = "index.html";
-            })
-            .catch(error => {
-                alert(error.message);
-            })
+
+        // fetch("https://js-lista-de-tarefas-api.onrender.com/usuarios", {
+        //     method: "post",
+        //     headers: {
+        //         "Content-type": "application/json"
+        //     },
+        //     body: JSON.stringify(dados)
+        // })
+        //     .then(resposta => resposta.json())
+        //     .then(json => {
+        //         // Vamos tratar o dado de login, verificar se vem um erro, ou não.
+
+        //         if (json.tipo == "error") {
+        //             alert(json.mensagem);
+        //             return;
+        //         }
+        //         alert(json.mensagem);
+        //         window.location.href = "index.html";
+        //     })
+        //     .catch(error => {
+        //         alert(error.message);
+        //     })
 
         // console.log(dados);
 
     }
     return (
-        <div class="bg-slate-200 h-screen flex justify-center items-center">
-            <div class="bg-white shadow-lg rounded-lg p-4">
-                <Link to="/" class="flex justify-end">logar</Link>
-                <h1 class="font-bold text-xl mb-6">Cadastre-se</h1>
+        <div className="bg-slate-200 h-screen flex justify-center items-center">
+            <div className="bg-white shadow-lg rounded-lg p-4">
+                <Link to="/" className="flex justify-end">logar</Link>
+                <h1 className="font-bold text-xl mb-6">Cadastre-se</h1>
 
-                <form onSubmitit={logar} class="flex flex-col w-80">
+                <form onSubmit={cadastrar} className="flex flex-col w-80">
 
-                    <label for="text" class="uppercase text-xs font-bold mb-2 block">Nome</label>
-                    <input id="nome" type="text" placeholder="Digite seu nome"
-                        class="pl-3 h-10 border-2 border-slate-400 focus:border-purple-600 duration-150 rounded outline-none mb-4"
+                    <label className="uppercase text-xs font-bold mb-2 block">Nome</label>
+                    <input
+                        ref={nome}
+                        type="text"
+                        placeholder="Digite seu nome"
+                        className="pl-3 h-10 border-2 border-slate-400 focus:border-purple-600 duration-150 rounded outline-none mb-4"
                         required />
 
-                    <label for="senha" class="uppercase text-xs font-bold mb-2 block">Email</label>
-                    <input id="email" type="email" placeholder="email@email.com"
-                        class="pl-3 h-10 border-2 border-slate-400 focus:border-purple-600 duration-150 rounded outline-none mb-4"
+                    <label className="uppercase text-xs font-bold mb-2 block">Email</label>
+                    <input
+                        ref={email}
+                        type="email"
+                        placeholder="email@email.com"
+                        className="pl-3 h-10 border-2 border-slate-400 focus:border-purple-600 duration-150 rounded outline-none mb-4"
                         required />
 
-                    <label for="senha" class="uppercase text-xs font-bold mb-2 block">Senha</label>
-                    <input id="senha" type="password" placeholder="********"
-                        class="pl-3 h-10 border-2 border-slate-400 focus:border-purple-600 duration-150 rounded outline-none mb-4"
+                    <label className="uppercase text-xs font-bold mb-2 block">Senha</label>
+                    <input
+                        ref={senha}
+                        type="password"
+                        placeholder="********"
+                        className="pl-3 h-10 border-2 border-slate-400 focus:border-purple-600 duration-150 rounded outline-none mb-4"
                         required />
 
                     <button type="submit"
-                        class="w-full h-10 rounded bg-purple-400 hover:bg-purple-600 duration-200 hover:text-white font-bold">Registrar</button>
+                        className="w-full h-10 rounded bg-purple-400 hover:bg-purple-600 duration-200 hover:text-white font-bold">
+                        {dadosCadastrados ? "Cadastrando..." : "Cadastrar"}
+                    </button>
 
                 </form>
             </div>
