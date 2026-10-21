@@ -20,42 +20,24 @@ const Login = () => {
 
         try {
             const resposta = await AXIOS.post("/login", dados);
+            // TEMPORÁRIO: ver no console (F12) o que a API retorna
+            console.log("Resposta da API:", resposta.data);
             setCarregando(false);
 
             if (resposta.data.tipo == "warning") {
                 alert(resposta.data.mensagem)
                 return;
             }
-            sessionStorage.setItem("usuario", JSON.stringify(resposta.data.mensagem));
+            // ALTERADO: salvar o objeto do usuário (com id), não a mensagem de texto
+            sessionStorage.setItem("usuario", JSON.stringify(resposta.data.usuario));
             alert(resposta.data.mensagem);
             navegar("/tarefas")
         } catch (error) {
             setCarregando(false);
-            alert(error.mensagem)
+            alert(error.message)
         }
 
 
-        //     fetch("https://js-lista-de-tarefas-api.onrender.com/login",
-        //         {
-        //             method: "post",
-        //             headers: {
-        //                 "Content-type": "application/json"
-        //             },
-        //             body: JSON.stringify(dados)
-        //         })
-        //         .then(resposta => resposta.json())
-        //         .then(json => {
-
-        //             if (json.tipo == "error") {
-        //                 alert(json.mensage)
-        //                 return;
-        //             }
-        //             alert(json.mensage)
-        //             window.location.href = "tarefas.html"
-        //         })
-        //         .catch(error => {
-        //             alert(error.message);
-        //         });
     };
 
     return (

@@ -23,41 +23,18 @@ const Cadastro = () => {
             const resposta = await AXIOS.post("/usuarios", dados)
             setDadosCadastrados(false);
             if (resposta.data.tipo == "error") {
-                alert(resposta.data.mensage)
+                alert(resposta.data.mensagem)
                 return;
             }
         sessionStorage.setItem("usuario", JSON.stringify(resposta.data.usuario))
-            alert(resposta.data.mensage);
+            alert(resposta.data.mensagem);
             navegar("/")
         } catch (error) {
             setDadosCadastrados(false);
-            alert(error.mensagem)
+            // ALTERADO: error.message (inglês, com "ss") — propriedade correta do JavaScript
+            alert(error.message)
         }
 
-
-        // fetch("https://js-lista-de-tarefas-api.onrender.com/usuarios", {
-        //     method: "post",
-        //     headers: {
-        //         "Content-type": "application/json"
-        //     },
-        //     body: JSON.stringify(dados)
-        // })
-        //     .then(resposta => resposta.json())
-        //     .then(json => {
-        //         // Vamos tratar o dado de login, verificar se vem um erro, ou não.
-
-        //         if (json.tipo == "error") {
-        //             alert(json.mensagem);
-        //             return;
-        //         }
-        //         alert(json.mensagem);
-        //         window.location.href = "index.html";
-        //     })
-        //     .catch(error => {
-        //         alert(error.message);
-        //     })
-
-        // console.log(dados);
 
     }
     return (

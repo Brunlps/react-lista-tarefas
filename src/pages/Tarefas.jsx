@@ -4,29 +4,31 @@ import { AXIOS } from "../services";
 import { BiPencil, BiTrash } from "react-icons/bi";
 
 const Tarefas = () => {
-    // State de tarefas
+// State de tarefas
     const [tarefas, setTarefas] = useState([]);
 
-    // State Formulario de cração das tarefas
+// State Formulario de cração das tarefas
     const [criarForm, setCriarForm] = useState(false);
 
-    // State de Editar tarefa
+// State de Editar tarefa
     const [editarForm, setEditarForm] = useState(false);
 
-    // É um espaço de armazenamento dentro do navegador, 
-    // onde você guarda pequenos dados em formato de texto, no esquema "nome → valor". 
-    // No seu projeto ele guarda o usuário depois do cadastro ou login.
-    const usuario = JSON.parse(sessionStorage.getItem("usuarios"));
+// É um espaço de armazenamento dentro do navegador, 
+// onde você guarda pequenos dados em formato de texto, no esquema "nome → valor". 
+// No seu projeto ele guarda o usuário depois do cadastro ou login.
+    const usuario = JSON.parse(sessionStorage.getItem("usuario") || null);
     
 
-
+// Referências para os campos do formulário
     const criarTitulo = useRef(null);
     const criarDescricao = useRef(null);
 
+// Referências para os campos do formulário de edição
     const editarId = useRef(null);
     const editarTitulo = useRef(null);
     const editarDescricao = useRef(null);
 
+// Navegação entre páginas
     const navegar = useNavigate();
 
 
@@ -36,7 +38,8 @@ const Tarefas = () => {
             return;
         };
         if (palavra.length >= 3) {
-            let tarefaFiltradas = tarefas.filter(tarefa => tarefa.titulo.toLowerCase().includes(palavra.toLowerCase()));
+            let tarefasFiltradas = tarefas.filter(tarefa => tarefa.titulo.toLowerCase().includes(palavra.toLowerCase()));
+            setTarefas(tarefasFiltradas);
         };
     };
 
@@ -46,7 +49,7 @@ const Tarefas = () => {
                 navegar("/");
                 return;
             };
-            const resposta = await AXIOS.get(`/tarefa/${usuario.id}`);
+            const resposta = await AXIOS.get(`/tarefas/${usuario.id}`);
             setTarefas(resposta.data)
         } catch (error) {
             console.log("Error: ", error.message);
@@ -54,61 +57,62 @@ const Tarefas = () => {
         };
     }
 
-    async function criarTarefa() {
+    async function criarTarefa(event) {
+        event.preventDefault();
+
         try {
             let dados = {
                 titulo: criarTitulo.current.value,
                 descricao: criarDescricao.current.value,
                 usuario_id: usuario.id
             }
-            const resposta = await AXIOS.post("/tarefa", dados);
+            const resposta = await AXIOS.post("/tarefas", dados);
 
             alert(resposta.data.mensagem);
             setCriarForm(false);
             buscarTarefa();
 
         } catch (error) {
-            alert("Error: ", error.message);
+            alert(`Error: ${error.message}`);
 
         };
     }
 
-    async function editarTarefa() {
+    async function editarTarefa(event) {
         event.preventDefault();
 
         try {
             let dados = {
-                id: idEditar.current.value,
+                id: editarId.current.value,
                 titulo: editarTitulo.current.value,
                 descricao: editarDescricao.current.value,
                 usuario_id: usuario.id
             }
 
-            const resposta = await AXIOS.put(`/tarefa/${dados.id}`, dados);
+            const resposta = await AXIOS.put(`/tarefas/${dados.id}`, dados);
 
             alert(resposta.data.mensagem);
             setEditarForm(false);
             buscarTarefa();
 
         } catch (error) {
-            alert("Error: ", error.message);
+            alert(`Error: ${error.message}`);
         }
     }
 
     async function deletarTarefa(id) {
-        event.preventDefault();
 
         try {
             if (!confirm("Deseja realmente deletar a tarefa?")) {
-                const resposta = await AXIOS.delete(`/tarefa/${id}`);
-
+                return;
             }
-
+            
+            const resposta = await AXIOS.delete(`/tarefas/${id}`);
             alert(resposta.data.mensagem);
             buscarTarefa();
 
         } catch (error) {
-            alert("Error: ", error.message);
+            alert(`Error: ${error.message}`);
         }
     }
 
@@ -117,12 +121,18 @@ const Tarefas = () => {
     }, []);
     return (
         <div>
-            <header className="flex items-center py-4 px-15 bg-linear-to-r from-purple-900 via-purple-600 to-purple-900">
-                <input onChange={(event) => pesquisarTarefas((event.target.value))} type="text" placeholder="Pesquisar" className="w-100 h-10 pl-4 mx-2 rounded bg-white" />
-
+            <header
+                className="flex justify-between items-center py-4 px-15 bg-linear-to-r from-purple-900 via-purple-600 to-purple-900">
+                <input
+                    onChange={(event) => pesquisarTarefa(event.target.value)}
+                    type="text"
+                    placeholder="Pesquisar"
+                    className="w-100 h-10 pl-4 rounded bg-white"
+                />
                 <button
-                    onClick={() => setTarefas(true)}
-                    className="leading-10 bg-purple-800 rounded px-4 font-bold text-white duration-200 cursor-pointer hover:bg-purple-400 hover:text-black">Buscar Tarefa</button>
+                    onClick={() => setCriarForm(true)}
+                    className="leading-10 bg-purple-800 rounded px-4 font-bold text-white duration-200 cursor-pointer hover:bg-purple-400 hover:text-black">Nova
+                    Tarefa</button>
             </header>
             <main className="p-5 bg-slate-200">
                 <h1 className="text-3xl font-bold mb-6">Tarefas</h1>
@@ -133,9 +143,9 @@ const Tarefas = () => {
                             <div>Crie a sua primeira tarefa</div>
                         ) : (
                             tarefas.map(tarefa => (
-                                <div className="bg-white p-4 rounded-lg">
+                                <div key={tarefa.id} className="bg-white p-4 rounded-lg">
                                     <h3 className=" font-bold mb-4">{tarefa.titulo}</h3>
-                                    <p>{tarefa.decricao}</p>
+                                    <p>{tarefa.descricao}</p>
                                     <div>
                                         <BiPencil
                                             onClick={() => {
@@ -155,34 +165,19 @@ const Tarefas = () => {
                             ))
                         )
                     }
-                    <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md" id="form-tarefa">
-
-                        <h1 className="text-2xl font-bold text-center text-gray-800 mb-6">Lista De Tarefas</h1>
-
-                        <form id="" className="flex gap-2 mb-6">
-
-                            <input onchange="criarTarefa(event.target.value)" type="text" id="input-tarefa" placeholder="Digite uma tarefa" className="flex-1 border border-x-gray-300 rounded-lg px-4 focus:outline-none focus:border-blue-500" />
-
-                            <button type="submit" className="bg-blue-500 text-white px-4 py-2
-                                rounded-lg p-2 hover:border-blue-600 cursor-pointer">Adicionar</button>
-                        </form>
-                        <ul id="lista-tarefas" className="space-y-2"></ul>
-                    </div>
                 </div>
-
-                {/* Sessão de criar tarefas */}
-
+                {/* Formulario de criação de tarefas */}
+                {/* ALTERADO: adicionado z-40 no overlay e z-50 no modal para o form ficar na frente */}
                 <div
                     id="overlay"
                     onClick={() => {
                         setCriarForm(false);
                     }}
-                    className={`w-full h-screen bg-black/70 fixed top-0 left-0 duration-200 ${criarForm ? "" : "opacity-0 invisible"}`}
+                    className={`w-full h-screen bg-black/70 fixed top-0 left-0 z-40 duration-200 ${criarForm ? "" : "opacity-0 invisible"}`}
                 >
-
                 </div>
                 <div id="form-criar"
-                    className={`w-100 p-4 rounded-lg bg-white fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 duration-200 delay-200 ${criarForm ? "" : "opacity-0 invisible"}`}>
+                    className={`w-100 p-4 rounded-lg bg-white fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 duration-200 delay-200 ${criarForm ? "" : "opacity-0 invisible"}`}>
                     <div className="flex justify-end">
                         <box-icon
                             name='x'
@@ -194,7 +189,7 @@ const Tarefas = () => {
                     <form
                         onSubmit={criarTarefa}
                         className="flex flex-col">
-                        <label for="titulo" className="uppercase text-xs font-bold mb-2 block">Titulo</label>
+                        <label htmlFor="titulo" className="uppercase text-xs font-bold mb-2 block">Titulo</label>
                         <input
                             ref={criarTitulo}
                             id="titulo"
@@ -203,7 +198,7 @@ const Tarefas = () => {
                             className="pl-3 h-10 border-2 border-slate-400 focus:border-purple-600 duration-150 rounded outline-none mb-4"
                             required
                         />
-                        <label for="descricao" className="uppercase text-xs font-bold mb-2 block">Descrição</label>
+                        <label htmlFor="descricao" className="uppercase text-xs font-bold mb-2 block">Descrição</label>
                         <textarea
                             ref={criarDescricao}
                             id="descricao"
@@ -215,8 +210,9 @@ const Tarefas = () => {
                     </form>
                 </div>
 
+                {/* ALTERADO: adicionado z-50 para o modal de editar ficar na frente do overlay */}
                 <div id="form-editar"
-                    className={`w-100 p-4 rounded-lg bg-white fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 duration-200 delay-200 ${editarForm ? "" : "opacity-0 invisible"}`}>
+                    className={`w-100 p-4 rounded-lg bg-white fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 duration-200 delay-200 ${editarForm ? "" : "opacity-0 invisible"}`}>
                     <div className="flex justify-end">
                         <box-icon
                             name='x'
