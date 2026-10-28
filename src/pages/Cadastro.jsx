@@ -1,7 +1,6 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router";
-import { AXIOS } from "../services";
-
+import { AXIOS, getUsuarioSessao } from "../services";
 
 const Cadastro = () => {
     const nome = useRef(null);
@@ -10,32 +9,47 @@ const Cadastro = () => {
     const navegar = useNavigate();
     const [dadosCadastrados, setDadosCadastrados] = useState(false);
 
+    useEffect(() => {
+        const usuario = getUsuarioSessao();
+
+        if (usuario?.id) {
+            navegar("/tarefas", { replace: true });
+        }
+    }, [navegar]);
+
     async function cadastrar(event) {
         event.preventDefault();
-        setDadosCadastrados(true)
-        let dados = {
+        setDadosCadastrados(true);
+
+        const dados = {
             nome: nome.current.value,
             email: email.current.value,
             senha: senha.current.value
-        }
+        };
 
         try {
-            const resposta = await AXIOS.post("/usuarios", dados)
+            const resposta = await AXIOS.post("/usuarios", dados);
             setDadosCadastrados(false);
-            if (resposta.data.tipo == "error") {
-                alert(resposta.data.mensagem)
+
+            if (resposta.data?.tipo === "error") {
+                alert(resposta.data.mensagem);
                 return;
             }
-        sessionStorage.setItem("usuario", JSON.stringify(resposta.data.usuario))
+
+            const usuario = resposta.data?.usuario;
+
+            if (!usuario?.id) {
+                alert("Dados de usuário inválidos na resposta da API.");
+                return;
+            }
+
+            sessionStorage.setItem("usuario", JSON.stringify(usuario));
             alert(resposta.data.mensagem);
-            navegar("/")
+            navegar("/tarefas", { replace: true });
         } catch (error) {
             setDadosCadastrados(false);
-            // ALTERADO: error.message (inglês, com "ss") — propriedade correta do JavaScript
-            alert(error.message)
+            alert(error.message);
         }
-
-
     }
     return (
         <div className="bg-slate-200 h-screen flex justify-center items-center">

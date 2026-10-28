@@ -1,114 +1,104 @@
 import { useRef, useState, useEffect } from "react";
 import { useNavigate } from "react-router";
-import { AXIOS } from "../services";
+import { AXIOS, getUsuarioSessao } from "../services";
 import { BiPencil, BiTrash, BiX } from "react-icons/bi";
 
 const Tarefas = () => {
-// State de tarefas
     const [tarefas, setTarefas] = useState([]);
-
-// State Formulario de cração das tarefas
     const [criarForm, setCriarForm] = useState(false);
-
-// State de Editar tarefa
     const [editarForm, setEditarForm] = useState(false);
-
-// State do texto digitado na pesquisa
     const [busca, setBusca] = useState("");
 
-// É um espaço de armazenamento dentro do navegador, 
-// onde você guarda pequenos dados em formato de texto, no esquema "nome → valor". 
-// No seu projeto ele guarda o usuário depois do cadastro ou login.
-    const usuario = JSON.parse(sessionStorage.getItem("usuario") || null);
+    const usuario = getUsuarioSessao();
     const usuarioId = usuario?.id;
-    
 
-// Referências para os campos do formulário
     const criarTitulo = useRef(null);
     const criarDescricao = useRef(null);
 
-// Referências para os campos do formulário de edição
     const editarId = useRef(null);
     const editarTitulo = useRef(null);
     const editarDescricao = useRef(null);
 
-// Navegação entre páginas
     const navegar = useNavigate();
 
-
-// Lista exibida: a busca só filtra a visualização, o state "tarefas" fica intacto
     const tarefasVisiveis = busca.length >= 3
         ? tarefas.filter(tarefa => tarefa.titulo.toLowerCase().includes(busca.toLowerCase()))
         : tarefas;
 
     async function buscarTarefa() {
         try {
-            if (!usuario) {
+            if (!usuario?.id) {
                 navegar("/");
                 return;
-            };
+            }
+
             const resposta = await AXIOS.get(`/tarefas/${usuario.id}`);
-            setTarefas(resposta.data)
+            setTarefas(resposta.data);
         } catch (error) {
             console.log("Error: ", error.message);
-
-        };
+        }
     }
 
     async function criarTarefa(event) {
         event.preventDefault();
 
         try {
-            let dados = {
+            if (!usuario?.id) {
+                navegar("/");
+                return;
+            }
+
+            const dados = {
                 titulo: criarTitulo.current.value,
                 descricao: criarDescricao.current.value,
                 usuario_id: usuario.id
-            }
+            };
+
             const resposta = await AXIOS.post("/tarefas", dados);
 
             alert(resposta.data.mensagem);
             setCriarForm(false);
             buscarTarefa();
-
         } catch (error) {
             alert(`Error: ${error.message}`);
-
-        };
+        }
     }
 
     async function editarTarefa(event) {
         event.preventDefault();
 
         try {
-            let dados = {
+            if (!usuario?.id) {
+                navegar("/");
+                return;
+            }
+
+            const dados = {
                 id: editarId.current.value,
                 titulo: editarTitulo.current.value,
                 descricao: editarDescricao.current.value,
                 usuario_id: usuario.id
-            }
+            };
 
             const resposta = await AXIOS.put(`/tarefas/${dados.id}`, dados);
 
             alert(resposta.data.mensagem);
             setEditarForm(false);
             buscarTarefa();
-
         } catch (error) {
             alert(`Error: ${error.message}`);
         }
     }
 
     async function deletarTarefa(id) {
-
         try {
             if (!confirm("Deseja realmente deletar a tarefa?")) {
                 return;
             }
-            
+
             const resposta = await AXIOS.delete(`/tarefas/${id}`);
             alert(resposta.data.mensagem);
             buscarTarefa();
-
         } catch (error) {
             alert(`Error: ${error.message}`);
         }
@@ -119,6 +109,7 @@ const Tarefas = () => {
             navegar("/");
             return;
         }
+
         AXIOS.get(`/tarefas/${usuarioId}`)
             .then(resposta => setTarefas(resposta.data))
             .catch(error => console.log("Error: ", error.message));

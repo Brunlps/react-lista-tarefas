@@ -1,5 +1,5 @@
-import { AXIOS } from "../services";
-import { useRef, useState } from "react";
+import { AXIOS, getUsuarioSessao } from "../services";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router";
 
 const Login = () => {
@@ -8,37 +8,47 @@ const Login = () => {
     const navegar = useNavigate();
     const [carregando, setCarregando] = useState(false);
 
+    useEffect(() => {
+        const usuario = getUsuarioSessao();
+
+        if (usuario?.id) {
+            navegar("/tarefas", { replace: true });
+        }
+    }, [navegar]);
+
     async function logar(event) {
         event.preventDefault();
         setCarregando(true);
 
-
-        let dados = {
+        const dados = {
             email: email.current.value,
             senha: senha.current.value
-        }
+        };
 
         try {
             const resposta = await AXIOS.post("/login", dados);
-            // TEMPORÁRIO: ver no console (F12) o que a API retorna
-            console.log("Resposta da API:", resposta.data);
+            const usuario = resposta.data?.usuario;
+
             setCarregando(false);
 
-            if (resposta.data.tipo == "warning") {
-                alert(resposta.data.mensagem)
+            if (resposta.data?.tipo === "warning") {
+                alert(resposta.data.mensagem);
                 return;
             }
-            // ALTERADO: salvar o objeto do usuário (com id), não a mensagem de texto
-            sessionStorage.setItem("usuario", JSON.stringify(resposta.data.usuario));
+
+            if (!usuario?.id) {
+                alert("Dados de usuário inválidos na resposta da API.");
+                return;
+            }
+
+            sessionStorage.setItem("usuario", JSON.stringify(usuario));
             alert(resposta.data.mensagem);
-            navegar("/tarefas")
+            navegar("/tarefas", { replace: true });
         } catch (error) {
             setCarregando(false);
-            alert(error.message)
+            alert(error.message);
         }
-
-
-    };
+    }
 
     return (
         <div className="bg-slate-200 h-screen flex justify-center items-center">
