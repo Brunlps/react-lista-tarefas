@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { AXIOS } from "../services";
-import { BiPencil, BiTrash } from "react-icons/bi";
+import { BiPencil, BiTrash, BiX } from "react-icons/bi";
 
 const Tarefas = () => {
 // State de tarefas
@@ -13,10 +13,14 @@ const Tarefas = () => {
 // State de Editar tarefa
     const [editarForm, setEditarForm] = useState(false);
 
+// State do texto digitado na pesquisa
+    const [busca, setBusca] = useState("");
+
 // É um espaço de armazenamento dentro do navegador, 
 // onde você guarda pequenos dados em formato de texto, no esquema "nome → valor". 
 // No seu projeto ele guarda o usuário depois do cadastro ou login.
     const usuario = JSON.parse(sessionStorage.getItem("usuario") || null);
+    const usuarioId = usuario?.id;
     
 
 // Referências para os campos do formulário
@@ -32,16 +36,10 @@ const Tarefas = () => {
     const navegar = useNavigate();
 
 
-    function pesquisarTarefas(palavra) {
-        if (palavra.length == 0) {
-            setTarefas(tarefas);
-            return;
-        };
-        if (palavra.length >= 3) {
-            let tarefasFiltradas = tarefas.filter(tarefa => tarefa.titulo.toLowerCase().includes(palavra.toLowerCase()));
-            setTarefas(tarefasFiltradas);
-        };
-    };
+// Lista exibida: a busca só filtra a visualização, o state "tarefas" fica intacto
+    const tarefasVisiveis = busca.length >= 3
+        ? tarefas.filter(tarefa => tarefa.titulo.toLowerCase().includes(busca.toLowerCase()))
+        : tarefas;
 
     async function buscarTarefa() {
         try {
@@ -117,14 +115,20 @@ const Tarefas = () => {
     }
 
     useEffect(() => {
-        buscarTarefa();
-    }, []);
+        if (!usuarioId) {
+            navegar("/");
+            return;
+        }
+        AXIOS.get(`/tarefas/${usuarioId}`)
+            .then(resposta => setTarefas(resposta.data))
+            .catch(error => console.log("Error: ", error.message));
+    }, [usuarioId, navegar]);
     return (
         <div>
             <header
                 className="flex justify-between items-center py-4 px-15 bg-linear-to-r from-purple-900 via-purple-600 to-purple-900">
                 <input
-                    onChange={(event) => pesquisarTarefa(event.target.value)}
+                    onChange={(event) => setBusca(event.target.value)}
                     type="text"
                     placeholder="Pesquisar"
                     className="w-100 h-10 pl-4 rounded bg-white"
@@ -139,10 +143,10 @@ const Tarefas = () => {
                 {/* Sessão de criar tarefas */}
                 <div className="grid grid-cols-3 gap-4">
                     {
-                        tarefas.length == 0 ? (
-                            <div>Crie a sua primeira tarefa</div>
+                        tarefasVisiveis.length == 0 ? (
+                            <div>{tarefas.length == 0 ? "Crie a sua primeira tarefa" : "Nenhuma tarefa encontrada"}</div>
                         ) : (
-                            tarefas.map(tarefa => (
+                            tarefasVisiveis.map(tarefa => (
                                 <div key={tarefa.id} className="bg-white p-4 rounded-lg">
                                     <h3 className=" font-bold mb-4">{tarefa.titulo}</h3>
                                     <p>{tarefa.descricao}</p>
@@ -179,11 +183,11 @@ const Tarefas = () => {
                 <div id="form-criar"
                     className={`w-100 p-4 rounded-lg bg-white fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 duration-200 delay-200 ${criarForm ? "" : "opacity-0 invisible"}`}>
                     <div className="flex justify-end">
-                        <box-icon
-                            name='x'
+                        <BiX
+                            size={24}
                             className="cursor-pointer"
                             onClick={() => setCriarForm(false)}
-                        ></box-icon>
+                        />
                     </div>
 
                     <form
@@ -214,11 +218,11 @@ const Tarefas = () => {
                 <div id="form-editar"
                     className={`w-100 p-4 rounded-lg bg-white fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 duration-200 delay-200 ${editarForm ? "" : "opacity-0 invisible"}`}>
                     <div className="flex justify-end">
-                        <box-icon
-                            name='x'
+                        <BiX
+                            size={24}
                             className="cursor-pointer"
                             onClick={() => setEditarForm(false)}
-                        ></box-icon>
+                        />
                     </div>
 
                     <form

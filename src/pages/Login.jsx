@@ -65,7 +65,7 @@ const Login = () => {
                         className="pl-3 h-10 border-2 border-slate-400 focus:border-purple-600 duration-150 rounded outline-none mb-4"
                         required />
 
-                    <Link to="cadastro" className="my-5">Cadastre-se</Link>
+                    <Link to="/cadastro"className="my-5">Cadastre-se</Link>
 
                     <button disabled={carregando} className="w-full h-10 rounded bg-purple-400 hover:bg-purple-600 duration-200 hover:text-white font-bold">
                         {carregando ? "Carregando..." : "Logar"}
